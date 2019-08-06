@@ -1,8 +1,9 @@
 <template>
   <div class="wrapper">
-    <HeaderBar type="logout"></HeaderBar>
+    <HeaderBar type="logout" v-if="!gameWindow"></HeaderBar>
+    <HeaderBar type="goback" @cb="goback" v-else></HeaderBar>
 
-    <div class="c-body flex">
+    <div class="c-body flex" v-show="!gameWindow">
       <div class="user-list-box">
         <div class="user-list">
           <p v-for="(item, index) in usersData" :key="index">{{item}}</p>
@@ -38,12 +39,16 @@
         </div>
       </div>
     </div>
+    <div class="c-body flex" v-show="gameWindow">
+      <div id="canvas-box" ref='canvas'></div>
+    </div>
   </div>
 </template>
 
 <script>
 import HeaderBar from "@/components/header";
 import Storage from "@/utils/Storage";
+import GameMain from "@/game/main";
 export default {
   name: "chat",
   components: {
@@ -55,7 +60,9 @@ export default {
       count: 20,
       msg: "",
       chatData: [],
-      usersData: []
+      usersData: [],
+      gameWindow:false,
+      gameStart:false,
     };
   },
   created() {},
@@ -134,7 +141,15 @@ export default {
       }
     },
     toGame(){
-      this.$router.push("/game");
+      this.gameWindow = true;
+      // console.log("mounted",this.$refs.canvas);
+      if(!this.gameStart){
+        GameMain.init(this.$refs.canvas);
+      }
+      this.gameStart=true;
+    },
+    goback(){
+      this.gameWindow = false;
     }
   }
 };
@@ -233,4 +248,9 @@ export default {
 .user-list{
   height: 546px;
 }
+#canvas-box{
+  width: 100%;
+  height: 100%;
+}
+
 </style>

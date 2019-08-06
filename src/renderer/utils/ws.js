@@ -65,7 +65,7 @@ WS.prototype.send = function(data) {
     //socket关闭
     this.socket.close();
     //重连
-    this.createSocket();
+    this.init();
     //放入队列
     this.socketMsgQueue.push(data);
   }
@@ -91,7 +91,7 @@ WS.prototype.closeWs = function() {
 WS.prototype.errorWs = function() {
   clearInterval(this.setIntervalWsPush);
   this.socket.close();
-  this.createSocket();
+  this.init();
   console.log("连接失败重连");
 };
 

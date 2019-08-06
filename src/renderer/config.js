@@ -1,10 +1,10 @@
 let Config = {
   //socket config
-  DOMAIN: "http://127.0.0.1:8090",
+  DOMAIN: "http://192.168.5.222:8090",
   WSS: {
-    loc: "ws://127.0.0.1:8090",
-    dev: "wss://127.0.0.1:8090",
-    master: "wss://127.0.0.1:8090"
+    loc: "ws://192.168.5.222:8090",
+    dev: "wss://192.168.5.222:8090",
+    master: "wss://192.168.5.222:8090"
   }
 };
 export default Config;

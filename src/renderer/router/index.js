@@ -16,11 +16,6 @@ export default new Router({
       component: require("@/components/chat").default
     },
     {
-      path: "/game",
-      name: "game",
-      component: require("@/components/game").default
-    },
-    {
       path: "*",
       redirect: "/"
     }

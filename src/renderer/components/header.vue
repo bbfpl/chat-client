@@ -46,7 +46,7 @@
         this.$router.push("/");
       },
       goback(){
-        this.$router.push("/chat");
+        this.$emit('cb')
       }
     }
   }

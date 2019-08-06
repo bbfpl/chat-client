@@ -1,0 +1,663 @@
+import Storage from "@/utils/Storage";
+import _Ws from "@/utils/ws";
+let WS = new _Ws();
+
+let Util = function() {};
+
+Util.randomRange = function(min, max) {
+  return Math.random() * (max - min) + min;
+};
+
+let Direction = {
+  UP: 0,
+  RIGHT: Math.PI / 2,
+  DOWN: Math.PI,
+  LEFT: (Math.PI * 3) / 2
+};
+
+let Bullet = function(x, y, direction) {
+  this.bulletSize = 4;
+  this.x = x;
+  this.y = y;
+  this.grap = 4;
+  this.direction = direction;
+  this.power = 1;
+  this.isLive = true;
+};
+
+Bullet.prototype.render = function(p) {
+  p.rect(
+    this.x - this.bulletSize / 2,
+    this.y - this.bulletSize,
+    this.bulletSize,
+    this.bulletSize
+  );
+};
+
+Bullet.prototype.getX = function() {
+  return this.x;
+};
+
+Bullet.prototype.init = function(x, y, direction) {
+  this.setLocation(x, y);
+  this.setDirection(direction);
+};
+Bullet.prototype.setLocation = function(x, y) {
+  this.x = x;
+  this.y = y;
+};
+
+Bullet.prototype.setDirection = function(direction) {
+  this.direction = direction;
+};
+
+Bullet.prototype.update = function(p) {
+  switch (this.direction) {
+    case Direction.UP:
+      this.y -= this.grap;
+      break;
+    case Direction.DOWN:
+      this.y += this.grap;
+      break;
+    case Direction.RIGHT:
+      this.x += this.grap;
+      break;
+    case Direction.LEFT:
+      this.x -= this.grap;
+      break;
+    default:
+      this.x += this.grap;
+  }
+};
+
+Bullet.prototype.checkEdges = function(edge_x, edge_y, x, y, direction) {
+  if (this.x >= edge_x || this.x <= 0 || this.y >= edge_y || this.y <= 0) {
+    this.init(x, y, direction);
+  }
+};
+
+Bullet.prototype.checkShot = function(x, y, range, p) {
+  if (p.dist(this.x, this.y, x, y) <= range) {
+    return true;
+  }
+  return false;
+};
+
+let Tank = function() {
+  (this.uid = ""), (this.tankWidth = 50);
+  this.tankHeight = 50;
+
+  this.gunturretWidth = 30;
+  this.gunturretHeight = 20;
+
+  this.cannonHeight = 30;
+  this.cannonDiameter = 6;
+
+  // tank的圆角
+  this.borderRadius = 5;
+  this.slotBulletFlag = true;
+  this.margin = 5;
+  // tank的重心坐标
+  this.x = 0;
+  this.y = 0;
+
+  this.direction = 0;
+  this.speed = 2;
+
+  this.bullets = [];
+  this.blood = 3;
+};
+
+Tank.prototype.setLocation = function(x, y) {
+  this.x = x;
+  this.y = y;
+};
+
+Tank.prototype.updateCenter = function(x, y) {
+  this.x = x;
+  this.y = y;
+};
+
+Tank.prototype.rotate = function(deg) {
+  this.direction = deg;
+};
+
+Tank.prototype.setDirection = function(direction) {
+  if (this.direction !== direction) {
+    this.rotate(direction);
+  }
+};
+
+Tank.prototype.goLeft = function() {
+  this.setDirection(Direction.LEFT);
+  this.x -= this.speed;
+};
+
+Tank.prototype.goRight = function() {
+  this.setDirection(Direction.RIGHT);
+  this.x += this.speed;
+};
+
+Tank.prototype.goUp = function() {
+  this.setDirection(Direction.UP);
+  this.y -= this.speed;
+};
+
+Tank.prototype.goDown = function() {
+  this.setDirection(Direction.DOWN);
+  this.y += this.speed;
+};
+
+Tank.prototype.slotBullet = function() {
+  this.bullets.push(new Bullet(this.x, this.y, this.direction));
+};
+
+Tank.prototype.checkCollision = function(x, y, p) {
+  if (
+    p.dist(this.x, this.y, x, y) <=
+    Math.sqrt(2 * this.tankWidth * this.tankWidth)
+  ) {
+    return true;
+  }
+  return false;
+};
+
+Tank.prototype.render = function(p) {
+  // render bullets
+  for (var i = 0; i < this.bullets.length; i++) {
+    this.bullets[i].render(p);
+    this.bullets[i].update(p);
+    console.log(this.bullets[i].x, this.bullets[i]);
+  }
+
+  p.push();
+  // 坦克的body
+  p.translate(this.x, this.y);
+  p.rotate(this.direction);
+  p.fill(255, 204, 0);
+  p.rect(
+    -this.tankWidth / 2,
+    -this.tankHeight / 2,
+    this.tankWidth,
+    this.tankHeight,
+    this.borderRadius
+  );
+  //坦克的炮台
+  p.fill(153, 204, 0);
+  p.rect(
+    -this.gunturretWidth / 2,
+    -this.gunturretHeight / 2,
+    this.gunturretWidth,
+    this.gunturretHeight,
+    this.borderRadius
+  );
+  // 坦克的大炮
+  p.fill(255, 255, 255);
+  p.rect(
+    -this.cannonDiameter / 2,
+    -this.gunturretHeight / 2 - this.cannonHeight,
+    this.cannonDiameter,
+    this.cannonHeight
+  );
+
+  p.pop();
+};
+
+let EnemyTank = function(min, x_max, y_max) {
+  Tank.call(this);
+  this.edge_min = min;
+  this.edge_x_max = x_max;
+  this.edge_y_max = y_max;
+  this.speed = 1;
+  this.bullet = "";
+  this.bulletsDistance = 60;
+  this.bulletsCount = 5;
+  this.color = "hsba(160, 100%, 50%, 0.5)";
+};
+
+EnemyTank.prototype = new Tank();
+
+EnemyTank.prototype.autoMove = function(p) {
+  this.render(p);
+  // this.autoUpdate(p);
+};
+
+// EnemyTank.prototype.autoUpdate = function(p) {
+//   this.goForward();
+//   if (this.isEdges()) {
+//     this.findDirection();
+//   }
+// };
+
+EnemyTank.prototype.setLocationAndDirection = function(x, y, direction) {
+  this.setLocation(x, y);
+  this.setDirection(direction);
+};
+
+EnemyTank.prototype.createRandom = function(x, y) {
+  var dir = this.getRandomDirection();
+  this.setLocationAndDirection(x, y, dir);
+};
+
+EnemyTank.prototype.getRandomDirection = function() {
+  var dirs = [];
+  for (var key in Direction) {
+    dirs.push(key);
+  }
+  var i = Math.floor(Util.randomRange(0, dirs.length));
+  return Direction[dirs[i]];
+};
+
+EnemyTank.prototype.isEdges = function() {
+  if (
+    this.x <= this.edge_min ||
+    this.x >= this.edge_x_max ||
+    this.y <= this.edge_min ||
+    this.y >= this.edge_y_max
+  ) {
+    return true;
+  }
+  return false;
+};
+
+EnemyTank.prototype.render = function(p) {
+  // render bullets
+  for (var i = 0; i < this.bullets.length; i++) {
+    this.bullets[i].render(p);
+    this.bullets[i].update(p);
+  }
+
+  p.push();
+  // 坦克的body
+
+  p.fill(p.color(this.color));
+
+  p.translate(this.x, this.y);
+  p.rotate(this.direction);
+
+  p.rect(
+    -this.tankWidth / 2,
+    -this.tankHeight / 2,
+    this.tankWidth,
+    this.tankHeight,
+    this.borderRadius
+  );
+  //坦克的炮台
+
+  p.rect(
+    -this.gunturretWidth / 2,
+    -this.gunturretHeight / 2,
+    this.gunturretWidth,
+    this.gunturretHeight,
+    this.borderRadius
+  );
+  // 坦克的大炮
+  p.rect(
+    -this.cannonDiameter / 2,
+    -this.gunturretHeight / 2 - this.cannonHeight,
+    this.cannonDiameter,
+    this.cannonHeight
+  );
+  p.pop();
+};
+
+EnemyTank.prototype.setColor = function(color) {
+  this.color = color;
+};
+// EnemyTank.prototype.goForward = function(rate) {
+//   if (arguments.length === 0) {
+//     var rate = 1;
+//   }
+
+//   switch (this.direction) {
+//     case Direction.UP:
+//       this.y -= this.speed * rate;
+//       break;
+//     case Direction.DOWN:
+//       this.y += this.speed * rate;
+//       break;
+//     case Direction.LEFT:
+//       this.x -= this.speed * rate;
+//       break;
+//     case Direction.RIGHT:
+//       this.x += this.speed * rate;
+//       break;
+//     default:
+//       this.y += this.speed * rate;
+//   }
+// };
+
+// EnemyTank.prototype.findDirection = function() {
+//   for (var dir in Direction) {
+//     if (this.direction === Direction[dir]) continue;
+//     this.setDirection(Direction[dir]);
+//     this.goForward();
+//     if (!this.isEdges()) {
+//       this.goForward(-1);
+//       break;
+//     }
+//     this.goForward(-1);
+//   }
+// };
+
+EnemyTank.prototype.changeDirctionWhenCollision = function() {
+  this.setDirection(this.direction + Math.PI);
+};
+
+EnemyTank.prototype.initBullets = function(dir) {
+  // this.bullets.push(new Bullet(this.x,this.y,this.direction));
+  this.bullet = new Bullet(this.x, this.y, this.direction);
+};
+
+EnemyTank.prototype.bulletsRender = function(p) {
+  this.bullet.render(p);
+  // if (
+  //   this.bullet.x <= 0 ||
+  //   this.bullet.x >= this.edge_x_max ||
+  //   this.bullet.y >= this.edge_y_max ||
+  //   this.bullet.y <= 0
+  // ) {
+  //   this.bullet.setLocation(this.x, this.y);
+  //   this.bullet.setDirection(this.direction);
+  // }
+  // this.bullet.update();
+};
+
+let Game = function(p5) {
+  this.p5 = p5;
+
+  this.EDGE_MIN = 40;
+  this.tank = null;
+  this.enemyTank = [];
+  this.enemyTankCounts = 0;
+  this.score = 0;
+  this.heart;
+  this.lives;
+  this.start = true;
+
+  this.p5init();
+  this.ws();
+};
+
+Game.prototype.ws = function() {
+  let that = this;
+  WS.init("ws://192.168.5.222:8090/ws/game?token=" + Storage.get("token"), {
+    Open: function() {},
+    Receive: function(data) {
+      // console.log(data);
+      if (data.type == "playJoin") {
+        for (let key in data.data) {
+          let _data = data.data[key];
+          if (key == Storage.get("uid")) {
+            that.tank = new Tank();
+            that.tank.setLocation(parseInt(_data.x), parseInt(_data.y));
+            that.tank.setDirection(_data.direction);
+          }
+
+          if (key != Storage.get("uid")) {
+            let enemy = new EnemyTank(
+              that.EDGE_MIN,
+              that.p5.width - that.EDGE_MIN,
+              that.p5.height - that.EDGE_MIN
+            );
+            enemy.uid = key;
+            enemy.setLocation(parseInt(_data.x), parseInt(_data.y));
+            enemy.setDirection(_data.direction);
+            that.enemyTank.push(enemy);
+            enemy.initBullets();
+          }
+        }
+      }
+      console.log(data);
+      // console.log(data.type == "pos" || data.uid != Storage.get("uid"));
+      if (data.type == "pos") {
+        for (let i = 0; i <= that.enemyTank.length; i++) {
+          if (that.enemyTank[i] != undefined) {
+            if (that.enemyTank[i].uid == data.uid) {
+              that.enemyTank[i].x = data.x;
+              that.enemyTank[i].y = data.y;
+              that.enemyTank[i].direction = data.direction;
+            }
+          }
+        }
+      }
+    },
+    Error: function() {
+      console.log("出现error");
+    },
+    Close: function() {
+      console.log("出现close");
+    }
+  });
+};
+Game.prototype.p5init = function() {
+  let that = this;
+  this.p5.preload = function() {
+    that.preload();
+  };
+  this.p5.setup = function() {
+    that.setup();
+  };
+  this.p5.draw = function() {
+    that.draw();
+  };
+  this.p5.keyPressed = function() {
+    that.keyPressed();
+  };
+};
+Game.prototype.preload = function() {
+  this.heart = this.p5.loadImage(require("./heart.png"));
+};
+Game.prototype.setup = function() {
+  this.lives = 3;
+  this.p5.createCanvas(590, 546);
+  this.p5.background(224);
+  this.p5.fill(255, 204, 0);
+
+  //创建自己的
+  // this.tank = new Tank();
+  // this.tank.setLocation(this.p5.width / 2, this.p5.height - 60);
+
+  //其它的
+  // for (let i = 0; i < this.enemyTankCounts; i++) {
+  //   this.enemyTank[i] = new EnemyTank(
+  //     EDGE_MIN,
+  //     this.p5.width - EDGE_MIN,
+  //     this.p5.height - EDGE_MIN
+  //   );
+  //   //创建随机
+  //   this.enemyTank[i].createRandom(
+  //     Util.randomRange(EDGE_MIN, this.p5.width),
+  //     Util.randomRange(EDGE_MIN, this.p5.height - EDGE_MIN)
+  //   );
+  //   this.enemyTank[i].initBullets();
+  // }
+};
+
+Game.prototype.draw = function() {
+  if (this.start) {
+    this.p5.background(224);
+
+    // 控制tank的方向
+    this.controlTankDirection();
+    if (this.tank) {
+      this.tank.render(this.p5);
+    }
+    // render enemytank
+    for (var i = 0; i < this.enemyTank.length; i++) {
+      this.enemyTank[i].bulletsRender(this.p5);
+      this.enemyTank[i].autoMove(this.p5);
+    }
+    this.showScore();
+    this.showlives();
+    this.addEnemyTank();
+    if (this.tank) {
+      this.enemyTankGetShoted();
+      this.tankGetScore();
+      this.tankGetShoted();
+    }
+
+    // enemyTanksgetCollisioned();
+  } else {
+    this.p5.clear();
+    this.p5.textSize(36);
+    this.p5.text(
+      "你的得分: " + this.score,
+      this.p5.width / 2,
+      this.p5.height / 2
+    );
+  }
+};
+Game.prototype.keyPressed = function() {
+  if (this.p5.keyCode === 32) {
+    this.tank.slotBullet();
+  }
+};
+
+//发送位置
+Game.prototype.send = function() {
+  let that = this;
+  WS.send({
+    type: "pos",
+    user: Storage.get("name"),
+    uid: Storage.get("uid"),
+    x: that.tank.x.toString(),
+    y: that.tank.y.toString(),
+    direction:that.tank.direction.toString()
+  });
+};
+
+Game.prototype.controlTankDirection = function() {
+  let that = this;
+  if (this.p5.keyIsDown(this.p5.LEFT_ARROW)) {
+    that.tank.goLeft();
+    that.send();
+  }
+  if (this.p5.keyIsDown(this.p5.UP_ARROW)) {
+    that.tank.goUp();
+    that.send();
+  }
+  if (this.p5.keyIsDown(this.p5.DOWN_ARROW)) {
+    that.tank.goDown();
+    that.send();
+  }
+  if (this.p5.keyIsDown(this.p5.RIGHT_ARROW)) {
+    that.tank.goRight();
+    that.send();
+  }
+};
+
+Game.prototype.showScore = function() {
+  this.p5.textSize(24);
+  this.p5.fill("red");
+  this.p5.text("分数: " + this.score, 30, 50);
+};
+
+Game.prototype.showlives = function() {
+  switch (this.lives) {
+    case 3:
+      this.p5.image(this.heart, 150, 30);
+      this.p5.image(this.heart, 190, 30);
+      this.p5.image(this.heart, 230, 30);
+      break;
+    case 2:
+      this.p5.image(this.heart, 190, 30);
+      this.p5.image(this.heart, 230, 30);
+      break;
+    case 1:
+      this.p5.image(this.heart, 230, 30);
+      break;
+    case 0:
+      // this.start = false;
+      break;
+  }
+};
+
+Game.prototype.enemyTankGetShoted = function() {
+  // 判断子弹击中enemyTank
+
+  for (let i = 0; i < this.tank.bullets.length; i++) {
+    for (let j = 0; j < this.enemyTank.length; j++) {
+      if (
+        this.tank.bullets[i].checkShot(
+          this.enemyTank[j].x,
+          this.enemyTank[j].y,
+          this.tank.tankWidth / 2,
+          this.p5
+        )
+      ) {
+        this.score++;
+        this.enemyTank.splice(j, 1);
+      }
+    }
+  }
+};
+
+Game.prototype.tankGetScore = function() {
+  for (let i = 0; i < this.tank.bullets.length; i++) {
+    if (
+      this.tank.bullets[i].x <= 0 ||
+      this.tank.bullets[i].y <= 0 ||
+      this.tank.bullets[i].x >= this.p5.width ||
+      this.tank.bullets[i] <= this.p5.height
+    ) {
+      this.tank.bullets.splice(i, 1);
+    }
+  }
+};
+Game.prototype.tankGetShoted = function() {
+  // 判断tank是否被击中
+  for (let i = this.enemyTank.length - 1; i >= 0; i--) {
+    if (
+      this.p5.dist(
+        this.enemyTank[i].bullet.x,
+        this.enemyTank[i].bullet.y,
+        this.tank.x,
+        this.tank.y
+      ) <=
+      this.tank.tankWidth / 2
+    ) {
+      // this.lives--;
+      this.enemyTank[i].bullet.init(
+        this.enemyTank[i].x,
+        this.enemyTank[i].y,
+        this.enemyTank[i].direction
+      );
+    }
+  }
+};
+Game.prototype.addEnemyTank = function() {
+  if (this.enemyTank.length < this.enemyTankCounts) {
+    this.enemyTank.push(
+      new EnemyTank(
+        this.EDGE_MIN,
+        this.p5.width - this.EDGE_MIN,
+        this.p5.height - this.EDGE_MIN
+      )
+    );
+    this.enemyTank[this.enemyTank.length - 1].createRandom(
+      Util.randomRange(this.EDGE_MIN, this.p5.width),
+      Util.randomRange(this.EDGE_MIN, this.p5.height - this.EDGE_MIN)
+    );
+    this.enemyTank[this.enemyTank.length - 1].initBullets();
+  }
+};
+Game.prototype.enemyTanksgetCollisioned = function() {
+  for (let i = 0, len = this.enemyTank.length; i < len; i++) {
+    for (let j = i + 1; j < len; j++) {
+      if (
+        this.enemyTank[i].checkCollision(
+          this.enemyTank[j].x,
+          this.enemyTank[j].y,
+          this.p5
+        )
+      ) {
+        this.enemyTank[i].changeDirctionWhenCollision();
+      }
+    }
+  }
+};
+
+export default function(p) {
+  return new Game(p);
+}
