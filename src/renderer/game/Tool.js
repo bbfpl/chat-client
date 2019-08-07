@@ -30,4 +30,31 @@ function uuid2(len, radix) {
   return uuid.join("");
 }
 
-export default uuid2;
+function setString(str, len) {
+  let strlen = 0;
+  let s = "";
+  for (let i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) > 128) {
+      strlen += 2;
+    } else {
+      strlen++;
+    }
+    s += str.charAt(i);
+    if (strlen >= len) {
+      return s;
+    }
+  }
+  return s;
+}
+
+function RandomNum(Min, Max) {
+  let range = Max - Min;
+  let rand = Math.random();
+  return Min + Math.round(rand * range);
+}
+
+export default {
+  setString: setString,
+  UUID: uuid2,
+  RandomNum: RandomNum
+};

@@ -22,11 +22,11 @@ function createWindow() {
    */
   mainWindow = new BrowserWindow({
     transparent: true,
-    height: 600,
+    height: 800,
     useContentSize: true,
     resizable: false,
     frame: false,
-    width: 600
+    width: 800
   });
   mainWindow.setMenu(null);
 

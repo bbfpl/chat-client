@@ -75,6 +75,8 @@ EnemyTank.prototype.render = function(p) {
     this.cannonHeight
   );
   p.pop();
+
+  this.showName(p);
 };
 
 EnemyTank.prototype.setColor = function(color) {

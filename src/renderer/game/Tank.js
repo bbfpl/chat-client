@@ -1,31 +1,45 @@
 import Bullet from "./Bullet";
 import Direction from "./Direction";
+import Tool from "./Tool";
 //坦克类
 
 let Tank = function() {
   this.uid = "";
-  this.tankWidth = 50;
-  this.tankHeight = 50;
+  this.playName = "坦克大侠";
+  this.playNamePos = {
+    x: 0,
+    y: 0
+  };
+  this.tankWidth = 30;
+  this.tankHeight = 30;
 
-  this.gunturretWidth = 30;
-  this.gunturretHeight = 20;
+  this.gunturretWidth = 15;
+  this.gunturretHeight = 15;
 
-  this.cannonHeight = 30;
-  this.cannonDiameter = 6;
+  this.cannonHeight = 15;
+  this.cannonDiameter = 4;
 
   // tank的圆角
-  this.borderRadius = 5;
+  this.borderRadius = 8;
   this.slotBulletFlag = true;
   this.margin = 5;
   // tank的重心坐标
   this.x = 0;
   this.y = 0;
 
+  //往上
   this.direction = 0;
+  this.directionName = "up";
+
   this.speed = 2;
 
   this.bullet = null;
   this.blood = 3;
+
+  this.isMove = false;
+
+  //血量
+  this.heart = 9;
 };
 
 Tank.prototype.setLocation = function(x, y) {
@@ -46,8 +60,21 @@ Tank.prototype.setDirection = function(direction) {
   if (this.direction !== direction) {
     this.rotate(direction);
   }
+  // this.isMove = true;
 };
 
+Tank.prototype.move = function(type, p) {
+  this.directionName = type;
+  if (type == "left") {
+    this.goLeft(p);
+  } else if (type == "right") {
+    this.goRight(p);
+  } else if (type == "up") {
+    this.goUp(p);
+  } else {
+    this.goDown(p);
+  }
+};
 Tank.prototype.goLeft = function() {
   this.setDirection(Direction.LEFT);
   this.x -= this.speed;
@@ -104,6 +131,7 @@ Tank.prototype.render = function(p) {
   p.push();
   // 坦克的body
   p.translate(this.x, this.y);
+
   p.rotate(this.direction);
   p.fill(255, 204, 0);
   p.rect(
@@ -113,6 +141,7 @@ Tank.prototype.render = function(p) {
     this.tankHeight,
     this.borderRadius
   );
+
   //坦克的炮台
   p.fill(153, 204, 0);
   p.rect(
@@ -131,6 +160,40 @@ Tank.prototype.render = function(p) {
     this.cannonHeight
   );
 
+  //血量
+  // p.fill(219,112,147);
+  // p.rect(
+  //   -this.tankWidth / 2,
+  //   this.gunturretHeight,
+  //   this.tankWidth,
+  //   5
+  // );
+
   p.pop();
+
+  this.showName(p);
+};
+Tank.prototype.showName = function(p) {
+  if (this.directionName == "up") {
+    this.playNamePos.x = this.x - 18;
+    this.playNamePos.y = this.y + 40;
+  } else if (this.directionName == "down") {
+    this.playNamePos.x = this.x - 18;
+    this.playNamePos.y = this.y - 30;
+  } else if (this.directionName == "left") {
+    this.playNamePos.x = this.x - 18;
+    this.playNamePos.y = this.y - 30;
+  } else {
+    this.playNamePos.x = this.x - 18;
+    this.playNamePos.y = this.y - 30;
+  }
+
+  p.textSize(12);
+  p.fill(30, 144, 255);
+  p.text(
+    Tool.setString(this.playName, 4) + "[" + this.heart + "]",
+    this.playNamePos.x,
+    this.playNamePos.y
+  );
 };
 export default Tank;

@@ -137,7 +137,8 @@ export default {
       // 滚动到最底部
       const div = this.$refs.area;
       if (div != undefined) {
-        div.scrollTop = div.scrollHeight;
+        console.log(div.scrollHeight);
+        div.scrollTop = div.scrollHeight-160;
       }
     },
     toGame(){
@@ -160,7 +161,7 @@ export default {
   height: 100%;
 }
 .c-body {
-  height: 546px;
+  height: 745px;
 }
 .user-list-box {
   width: 150px;
@@ -173,18 +174,18 @@ export default {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 .chat-box {
-  width: 450px;
+  width: 640px;
 }
 .chat-data {
-  height: 350px;
+  height: 550px;
   overflow: hidden;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  width: 440px;
+  width: 640px;
 }
 .chat-ul {
   overflow-y: scroll;
-  height: 400px;
-  width: 452px;
+  height: 540px;
+  width: 652px;
   padding: 10px;
 }
 .chat-ul li {
@@ -205,7 +206,7 @@ export default {
   margin: 0 5px 0 4px;
 }
 .send-box {
-  height: 100px;
+  height: 135px;
 }
 .send-box textarea {
   height: 100px;

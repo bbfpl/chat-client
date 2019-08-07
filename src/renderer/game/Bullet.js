@@ -1,9 +1,9 @@
 import Direction from "./Direction";
-import UUID from "./UUID";
+import Tool from "./Tool";
 //子弹类
 let Bullet = function(x, y, direction) {
   this.bulletSize = 4;
-  this._index = UUID(20);
+  this._index = Tool.UUID(20);
   this.x = x;
   this.y = y;
   this.grap = 4;
@@ -17,7 +17,8 @@ Bullet.prototype.render = function(p) {
     this.x - this.bulletSize / 2,
     this.y - this.bulletSize,
     this.bulletSize,
-    this.bulletSize
+    this.bulletSize,
+    4
   );
 };
 
