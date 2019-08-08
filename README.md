@@ -36,7 +36,8 @@ userJoin 有新用户加入
 userOut 用户退出
 
 
-目录解说：
+## 目录：
+```javascript
 E:.
 │  App.vue(略过)
 │  config.js(配置文件)
@@ -95,3 +96,4 @@ E:.
 └─utils
         Storage.js(localStorage)
         ws.js(简单封装了一下websocket)
+```
