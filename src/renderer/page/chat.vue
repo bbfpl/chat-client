@@ -46,9 +46,13 @@
 </template>
 
 <script>
-import HeaderBar from "@/components/header";
+import Vue from "vue";
+import HeaderBar from "@/page/header";
 import Storage from "@/utils/Storage";
 import GameMain from "@/game/main";
+
+import WS from "@/utils/ws";
+
 export default {
   name: "chat",
   components: {
@@ -65,16 +69,15 @@ export default {
       gameStart:false,
     };
   },
-  created() {},
+  created() {
+    Vue.prototype.$WS = new WS();
+  },
   mounted() {
     if (!Storage.get("name")) {
       this.$router.push("/");
     } else {
       this.initSocket();
     }
-  },
-  show(){
-    console.log(1);
   },
   filters: {
     formatDate(val) {
@@ -108,6 +111,7 @@ export default {
     //接收消息
     receiveMsg(data) {
       let that = this;
+      
       if (data.type == "msg") {
         that.chatData.push(data);
         setTimeout(() => {
@@ -115,6 +119,7 @@ export default {
         }, 50);
       }
       if (data.type == "userJoin") {
+        console.log(data.data);
         that.usersData = data.data;
       }
       if (data.type == "userOut") {
@@ -137,7 +142,6 @@ export default {
       // 滚动到最底部
       const div = this.$refs.area;
       if (div != undefined) {
-        console.log(div.scrollHeight);
         div.scrollTop = div.scrollHeight-160;
       }
     },

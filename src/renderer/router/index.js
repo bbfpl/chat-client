@@ -8,12 +8,12 @@ export default new Router({
     {
       path: "/",
       name: "login",
-      component: require("@/components/login").default
+      component: require("@/page/login").default
     },
     {
       path: "/chat",
       name: "chat",
-      component: require("@/components/chat").default
+      component: require("@/page/chat").default
     },
     {
       path: "*",

@@ -187,7 +187,7 @@ Tank.prototype.showName = function(p) {
     this.playNamePos.x = this.x - 18;
     this.playNamePos.y = this.y - 30;
   }
-
+  
   p.textSize(12);
   p.fill(30, 144, 255);
   p.text(
@@ -196,4 +196,5 @@ Tank.prototype.showName = function(p) {
     this.playNamePos.y
   );
 };
+
 export default Tank;

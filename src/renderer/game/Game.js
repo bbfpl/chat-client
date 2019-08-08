@@ -1,10 +1,11 @@
+import Message from "@/components/message";
 import Storage from "@/utils/Storage";
 import _Ws from "@/utils/ws";
 
 import Tank from "./Tank";
 import EnemyTank from "./EnemyTank";
 import Bullet from "./Bullet";
-import Tool from "./Tool";
+
 // import HealthBar from "./HealthBar";
 
 let WS = new _Ws();
@@ -67,24 +68,28 @@ Game.prototype.ws = function() {
       }
 
       if (data.type == "injured") {
-        console.log(data);
+        Message({
+          type: "warning",
+          text: data.user + "中弹"
+        });
         if (data.uid == Storage.get("uid")) {
-          that.tank = new Tank();
-          that.tank.playName = data.user;
-          that.tank.heart = data.heart;
-          that.tank.setLocation(parseInt(data.x), parseInt(data.y));
-          that.tank.setDirection(data.direction);
+          that.tank = null;
+          setTimeout(() => {
+            that.tank = new Tank();
+            that.tank.playName = data.user;
+            that.tank.heart = data.heart;
+            that.tank.setLocation(parseInt(data.x), parseInt(data.y));
+            that.tank.setDirection(data.direction);
+          }, 1000);
         }
 
         if (data.uid != Storage.get("uid")) {
-          
           // 先删除
           that.enemyTank.forEach((v, i) => {
             if (v.uid == data.uid) {
               that.enemyTank.splice(i, 1);
             }
           });
-          console.log(that.enemyTank);
           setTimeout(() => {
             // 在添加
             let enemy = new EnemyTank(
@@ -107,8 +112,10 @@ Game.prototype.ws = function() {
         for (let i = 0; i <= that.enemyTank.length; i++) {
           if (that.enemyTank[i] != undefined) {
             if (that.enemyTank[i].uid == data.uid) {
-              that.enemyTank[i].x = data.x;
-              that.enemyTank[i].y = data.y;
+              // console.log(that.enemyTank[i]);
+              that.enemyTank[i].playName = data.user;
+              that.enemyTank[i].x = parseInt(data.x);
+              that.enemyTank[i].y = parseInt(data.y);
               that.enemyTank[i].direction = data.direction;
             }
           }
@@ -126,6 +133,24 @@ Game.prototype.ws = function() {
             //无值
             that.enemyTankBullets[v.index] = new Bullet(v.x, v.y, v.direction);
           }
+        }
+      }
+
+      if (data.type == "gameOver") {
+        Message({
+          type: "error",
+          text: data.user + "已经死掉了，进入观察者模式"
+        });
+        if (data.uid == Storage.get("uid")) {
+          that.tank = null;
+        }
+        if (data.uid != Storage.get("uid")) {
+          // 先删除
+          that.enemyTank.forEach((v, i) => {
+            if (v.uid == data.uid) {
+              that.enemyTank.splice(i, 1);
+            }
+          });
         }
       }
     },
@@ -189,7 +214,7 @@ Game.prototype.draw = function() {
     }
     // render enemytank
     for (let i = 0; i < this.enemyTank.length; i++) {
-      this.enemyTank[i].autoMove(this.p5);
+      this.enemyTank[i].render(this.p5);
     }
 
     if (this.tank) {
@@ -282,7 +307,6 @@ Game.prototype.enemyTankGetShoted = function() {
         this.score++;
         console.log("坦克被击中");
         this.enemyTank.splice(j, 1);
-        // this.tankResurrection(tankuid);
 
         this.injured(tankuid);
       }
@@ -290,16 +314,6 @@ Game.prototype.enemyTankGetShoted = function() {
   }
 };
 
-//坦克复活
-Game.prototype.tankResurrection = function(tankuid) {
-  // let that = this;
-  // let tank = that.enemyTankTemp[tankuid];
-  // setTimeout(() => {
-  //   tank.x = Tool.RandomNum(0, that.p5.width);
-  //   tank.y = Tool.RandomNum(0, that.p5.height);
-  //   that.enemyTank.push(tank);
-  // }, 2000);
-};
 
 Game.prototype.tankBullet = function() {
   if (this.tank.bullet) {

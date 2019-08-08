@@ -7,7 +7,7 @@
       </div>
       <div class="from">
         <div class="from-box">
-          <input v-model="name" class="ui-input" placeholder="请输入用户名"/>
+          <input v-model="name" class="ui-input" placeholder="请输入用户名" />
         </div>
         <div class="from-box text-center">
           <template v-if="loading">
@@ -27,11 +27,9 @@
 </template>
 
 <script>
-import Vue from "vue";
 import Config from "@/config";
-import HeaderBar from "@/components/header";
+import HeaderBar from "@/page/header";
 import Storage from "@/utils/Storage";
-import WS from "@/utils/ws";
 
 export default {
   name: "login",
@@ -45,8 +43,6 @@ export default {
     };
   },
   created: function() {
-    Vue.prototype.$WS = new WS();
-    
     if (Storage.get("name")) {
       this.$router.push("/chat");
     }
@@ -56,7 +52,10 @@ export default {
       let that = this;
 
       if (this.name.length <= 0) {
-        this.$Message.warning("用户名不能为空");
+        this.$Message({
+          type: "warning",
+          text: "用户名不能为空"
+        });
         return false;
       }
 
@@ -68,7 +67,10 @@ export default {
         })
         .then(function(response) {
           let data = response.data;
-          // that.$Message.success("登录成功");
+          that.$Message({
+            type: "success",
+            text: "登录成功"
+          });
           Storage.set("name", that.name);
           Storage.set("token", data.token);
           Storage.set("uid", data.uid);

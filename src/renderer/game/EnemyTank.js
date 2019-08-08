@@ -1,5 +1,10 @@
 import Tank from "./Tank";
 import Bullet from "./Bullet";
+import Tool from "./Tool";
+
+
+
+
 //敌军坦克
 let EnemyTank = function(min, x_max, y_max) {
   Tank.call(this);
@@ -11,13 +16,11 @@ let EnemyTank = function(min, x_max, y_max) {
   this.bulletsDistance = 60;
   this.bulletsCount = 5;
   this.color = "hsba(160, 100%, 50%, 0.5)";
+
 };
 
 EnemyTank.prototype = new Tank();
 
-EnemyTank.prototype.autoMove = function(p) {
-  this.render(p);
-};
 
 EnemyTank.prototype.setLocationAndDirection = function(x, y, direction) {
   this.setLocation(x, y);
@@ -42,6 +45,7 @@ EnemyTank.prototype.render = function(p) {
   //   this.bullets[i].render(p);
   //   this.bullets[i].update(p);
   // }
+  
 
   p.push();
   // 坦克的body
@@ -78,6 +82,7 @@ EnemyTank.prototype.render = function(p) {
 
   this.showName(p);
 };
+
 
 EnemyTank.prototype.setColor = function(color) {
   this.color = color;

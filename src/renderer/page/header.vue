@@ -44,6 +44,7 @@
           type: "logout"
         });
         this.$router.push("/");
+        this.$WS.socket.close();
       },
       goback(){
         this.$emit('cb')
