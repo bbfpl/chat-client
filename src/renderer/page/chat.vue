@@ -118,10 +118,11 @@ export default {
           that.scrollTop();
         }, 50);
       }
+      
       if (data.type == "userJoin") {
-        console.log(data.data);
         that.usersData = data.data;
       }
+
       if (data.type == "userOut") {
         that.usersData = data.data;
       }

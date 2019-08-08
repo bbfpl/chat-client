@@ -6,7 +6,6 @@ import Tank from "./Tank";
 import EnemyTank from "./EnemyTank";
 import Bullet from "./Bullet";
 
-// import HealthBar from "./HealthBar";
 
 let WS = new _Ws();
 
