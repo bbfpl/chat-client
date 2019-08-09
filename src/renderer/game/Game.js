@@ -6,7 +6,6 @@ import Tank from "./Tank";
 import EnemyTank from "./EnemyTank";
 import Bullet from "./Bullet";
 
-
 let WS = new _Ws();
 
 let Game = function(p5) {
@@ -16,7 +15,6 @@ let Game = function(p5) {
   this.tank = null;
   this.enemyTank = [];
   this.enemyTankBullets = {};
-  // this.enemyTankTemp = {}; //坦克缓存
 
   this.score = 0;
 
@@ -32,6 +30,7 @@ Game.prototype.ws = function() {
   WS.init("ws://192.168.5.222:8090/ws/game?token=" + Storage.get("token"), {
     Open: function() {},
     Receive: function(data) {
+      //玩家加入
       if (data.type == "playJoin") {
         for (let key in data.data) {
           let _data = data.data[key];
@@ -56,16 +55,12 @@ Game.prototype.ws = function() {
             enemy.setDirection(_data.direction);
             that.enemyTank.push(enemy);
 
-            // if (!that.enemyTankTemp[key]) {
-            //   that.enemyTankTemp[key] = enemy;
-            // }
-            // console.log(that.enemyTankTemp);
-            // console.log(that.enemyTank);
             enemy.initBullets();
           }
         }
       }
 
+      //中弹复活
       if (data.type == "injured") {
         Message({
           type: "warning",
@@ -107,6 +102,7 @@ Game.prototype.ws = function() {
         }
       }
 
+      //位置变化
       if (data.type == "pos") {
         for (let i = 0; i <= that.enemyTank.length; i++) {
           if (that.enemyTank[i] != undefined) {
@@ -121,20 +117,29 @@ Game.prototype.ws = function() {
         }
       }
 
+      //子弹位置
       if (data.type == "bullets") {
-        let v = data.bullets;
-        if (v.uid != Storage.get("uid")) {
-          if (that.enemyTankBullets[v.index]) {
-            //有值
-            that.enemyTankBullets[v.index].setLocation(v.x, v.y);
-            that.enemyTankBullets[v.index].setDirection(v.direction);
-          } else {
-            //无值
-            that.enemyTankBullets[v.index] = new Bullet(v.x, v.y, v.direction);
+        let _data = data.bullets;
+        _data.forEach(v => {
+          if (v.uid != Storage.get("uid")) {
+            if (that.enemyTankBullets[v.index]) {
+              //有值
+              that.enemyTankBullets[v.index].setLocation(v.x, v.y);
+              that.enemyTankBullets[v.index].setDirection(v.direction);
+            } else {
+              //无值
+              that.enemyTankBullets[v.index] = new Bullet(
+                v.x,
+                v.y,
+                v.direction
+              );
+            }
           }
-        }
+        });
+        // console.log(that.enemyTankBullets);
       }
 
+      //死掉了
       if (data.type == "gameOver") {
         Message({
           type: "error",
@@ -164,7 +169,7 @@ Game.prototype.ws = function() {
 Game.prototype.p5init = function() {
   let that = this;
   this.p5.preload = function() {
-    that.preload();
+    // 暂无图片加载
   };
   this.p5.setup = function() {
     that.setup();
@@ -176,7 +181,7 @@ Game.prototype.p5init = function() {
     that.keyPressed();
   };
 };
-Game.prototype.preload = function() {};
+
 Game.prototype.setup = function() {
   this.lives = 10;
   this.p5.createCanvas(790, 745);
@@ -190,11 +195,10 @@ Game.prototype.draw = function() {
 
     //子弹的渲染
     if (Object.keys(this.enemyTankBullets).length > 0) {
-      console.log("子弹的渲染");
+      // console.log("子弹的渲染");
       for (let key in this.enemyTankBullets) {
         this.enemyTankBullets[key].render(this.p5);
         this.enemyTankBullets[key].update(this.p5);
-
         if (
           this.enemyTankBullets[key].x <= 0 ||
           this.enemyTankBullets[key].y <= 0 ||
@@ -206,9 +210,9 @@ Game.prototype.draw = function() {
       }
     }
 
-    // 控制tank的方向
-    this.controlTankDirection();
     if (this.tank) {
+      // 控制tank的方向
+      this.controlTankDirection();
       this.tank.render(this.p5);
     }
     // render enemytank
@@ -221,8 +225,6 @@ Game.prototype.draw = function() {
       this.tankBullet();
       this.tankGetShoted();
     }
-
-    // enemyTanksgetCollisioned();
   } else {
     this.p5.clear();
     this.p5.textSize(36);
@@ -236,18 +238,8 @@ Game.prototype.draw = function() {
 
 Game.prototype.keyPressed = function() {
   if (this.p5.keyCode === 32) {
-    if (!this.tank.bullet) {
-      this.tank.slotBullet();
-    }
+    this.tank.slotBullet();
   }
-  // if (
-  //   this.p5.keyCode == this.p5.UP_ARROW ||
-  //   this.p5.keyCode == this.p5.DOWN_ARROW ||
-  //   this.p5.keyCode == this.p5.LEFT_ARROW ||
-  //   this.p5.keyCode == this.p5.RIGHT_ARROW
-  // ) {
-  //   this.tank.isMove = false;
-  // }
 };
 
 Game.prototype.controlTankDirection = function() {
@@ -255,48 +247,27 @@ Game.prototype.controlTankDirection = function() {
   if (this.p5.keyIsDown(this.p5.LEFT_ARROW)) {
     that.tank.move("left", this.p5);
     that.sendPos();
-  }
-  if (this.p5.keyIsDown(this.p5.UP_ARROW)) {
+  } else if (this.p5.keyIsDown(this.p5.UP_ARROW)) {
     that.tank.move("up", this.p5);
     that.sendPos();
-  }
-  if (this.p5.keyIsDown(this.p5.DOWN_ARROW)) {
+  } else if (this.p5.keyIsDown(this.p5.DOWN_ARROW)) {
     that.tank.move("down", this.p5);
     that.sendPos();
-  }
-  if (this.p5.keyIsDown(this.p5.RIGHT_ARROW)) {
+  } else if (this.p5.keyIsDown(this.p5.RIGHT_ARROW)) {
     that.tank.move("right", this.p5);
     that.sendPos();
+  } else {
+    // console.log("啥都没有");
   }
-};
-
-Game.prototype.showlives = function() {
-  // switch (this.lives) {
-  //   case 3:
-  //     // this.p5.image(this.heart, 10, 10);
-  //     // this.p5.image(this.heart, 50, 10);
-  //     // this.p5.image(this.heart, 90, 10);
-  //     break;
-  //   case 2:
-  //     this.p5.image(this.heart, 50, 10);
-  //     this.p5.image(this.heart, 90, 10);
-  //     break;
-  //   case 1:
-  //     this.p5.image(this.heart, 90, 10);
-  //     break;
-  //   case 0:
-  //     // this.start = false;
-  //     break;
-  // }
 };
 
 Game.prototype.enemyTankGetShoted = function() {
   // 判断子弹击中enemyTank
-  if (this.tank.bullet) {
+  for (let i = 0; i < this.tank.bullets.length; i++) {
     for (let j = 0; j < this.enemyTank.length; j++) {
       let tankuid = this.enemyTank[j].uid;
       if (
-        this.tank.bullet.checkShot(
+        this.tank.bullets[i].checkShot(
           this.enemyTank[j].x,
           this.enemyTank[j].y,
           this.tank.tankWidth / 2,
@@ -304,7 +275,7 @@ Game.prototype.enemyTankGetShoted = function() {
         )
       ) {
         this.score++;
-        console.log("坦克被击中");
+        // console.log("坦克被击中");
         this.enemyTank.splice(j, 1);
 
         this.injured(tankuid);
@@ -313,17 +284,16 @@ Game.prototype.enemyTankGetShoted = function() {
   }
 };
 
-
 Game.prototype.tankBullet = function() {
-  if (this.tank.bullet) {
-    this.sendBulletPos(this.tank.bullet);
+  for (let i = 0; i < this.tank.bullets.length; i++) {
+    this.sendBulletPos(this.tank.bullets);
     if (
-      this.tank.bullet.x <= 0 ||
-      this.tank.bullet.y <= 0 ||
-      this.tank.bullet.x >= this.p5.width ||
-      this.tank.bullet.y >= this.p5.height
+      this.tank.bullets[i].x <= 0 ||
+      this.tank.bullets[i].y <= 0 ||
+      this.tank.bullets[i].x >= this.p5.width ||
+      this.tank.bullets[i] <= this.p5.height
     ) {
-      this.tank.bullet = null;
+      this.tank.bullets.splice(i, 1);
     }
   }
 };
@@ -348,21 +318,6 @@ Game.prototype.tankGetShoted = function() {
     }
   }
 };
-Game.prototype.enemyTanksgetCollisioned = function() {
-  for (let i = 0, len = this.enemyTank.length; i < len; i++) {
-    for (let j = i + 1; j < len; j++) {
-      if (
-        this.enemyTank[i].checkCollision(
-          this.enemyTank[j].x,
-          this.enemyTank[j].y,
-          this.p5
-        )
-      ) {
-        this.enemyTank[i].changeDirctionWhenCollision();
-      }
-    }
-  }
-};
 
 //发送位置
 Game.prototype.sendPos = function() {
@@ -378,14 +333,18 @@ Game.prototype.sendPos = function() {
 
 //发送子弹位置
 Game.prototype.sendBulletPos = function(bullets) {
-  let uid = Storage.get("uid"); //"1234567"; //
-  let values = {
-    uid: uid,
-    index: bullets._index,
-    x: bullets.x.toString(),
-    y: bullets.y.toString(),
-    direction: bullets.direction.toString()
-  };
+  let uid = Storage.get("uid");
+  let values = [];
+  bullets.forEach(v => {
+    values.push({
+      uid: uid,
+      index: v._index,
+      x: v.x.toString(),
+      y: v.y.toString(),
+      direction: v.direction.toString()
+    });
+  });
+
   WS.send({
     type: "bullets",
     bullets: values

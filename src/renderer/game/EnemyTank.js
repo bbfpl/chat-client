@@ -1,8 +1,5 @@
 import Tank from "./Tank";
 import Bullet from "./Bullet";
-import Tool from "./Tool";
-
-
 
 
 //敌军坦克
@@ -40,12 +37,7 @@ EnemyTank.prototype.isEdges = function() {
 };
 
 EnemyTank.prototype.render = function(p) {
-  // render bullets
-  // for (let i = 0; i < this.bullets.length; i++) {
-  //   this.bullets[i].render(p);
-  //   this.bullets[i].update(p);
-  // }
-  
+
 
   p.push();
   // 坦克的body

@@ -33,10 +33,8 @@ let Tank = function() {
 
   this.speed = 2;
 
-  this.bullet = null;
+  this.bullets = [];
   this.blood = 3;
-
-  this.isMove = false;
 
   //血量
   this.heart = 9;
@@ -60,7 +58,6 @@ Tank.prototype.setDirection = function(direction) {
   if (this.direction !== direction) {
     this.rotate(direction);
   }
-  // this.isMove = true;
 };
 
 Tank.prototype.move = function(type, p) {
@@ -108,7 +105,7 @@ Tank.prototype.goDown = function(p) {
 };
 
 Tank.prototype.slotBullet = function() {
-  this.bullet = new Bullet(this.x, this.y, this.direction);
+  this.bullets.push(new Bullet(this.x,this.y,this.direction));
 };
 
 Tank.prototype.checkCollision = function(x, y, p) {
@@ -123,10 +120,13 @@ Tank.prototype.checkCollision = function(x, y, p) {
 
 Tank.prototype.render = function(p) {
   // render bullets
-  if (this.bullet) {
-    this.bullet.render(p);
-    this.bullet.update(p);
+  for(let i = 0; i < this.bullets.length; i++){
+    this.bullets[i].render(p);
+    this.bullets[i].update(p);
   }
+
+
+
 
   p.push();
   // 坦克的body
