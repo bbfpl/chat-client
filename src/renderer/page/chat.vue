@@ -49,7 +49,7 @@
 import Vue from "vue";
 import HeaderBar from "@/page/header";
 import Storage from "@/utils/Storage";
-import GameMain from "@/game/main";
+import TankGameMain from "@/game/tank/main";
 
 import WS from "@/utils/ws";
 
@@ -150,7 +150,7 @@ export default {
       this.gameWindow = true;
       // console.log("mounted",this.$refs.canvas);
       if(!this.gameStart){
-        GameMain.init(this.$refs.canvas);
+        TankGameMain.init(this.$refs.canvas);
       }
       this.gameStart=true;
     },
